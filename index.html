@@ -2,74 +2,219 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>惊喜时刻</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>一马当先</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@900&display=swap" rel="stylesheet">
     <style>
-        body, html { margin: 0; padding: 0; overflow-x: hidden; font-family: sans-serif; }
-        
-        /* 初始占位部分，迫使页面产生滚动 */
-        .spacer {
-            height: 120vh;
-            background: linear-gradient(180deg, #f3f3f3, #ddd);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
+        :root {
+            --bg-color: #050505;
+            --accent-red: #c41e3a;
         }
 
-        /* 目标展示区域 */
-        .target-section {
-            height: 100vh;
-            background: #fff;
+        body {
+            background-color: var(--bg-color);
+            color: #fff;
+            font-family: 'Noto Serif SC', serif;
+            margin: 0;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            scrollbar-width: none; /* Firefox */
+        }
+        body::-webkit-scrollbar {
+            display: none; /* Safari and Chrome */
+        }
+
+        .char-box {
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
             position: relative;
         }
 
-        /* “一马当先” 文字样式 */
-        .slogan {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #e63946;
-            opacity: 0; /* 初始隐藏 */
+        .char {
+            font-size: clamp(150px, 50vw, 400px);
+            font-weight: 900;
+            line-height: 1;
+            opacity: 0;
             transform: translateY(50px);
-            transition: all 1s ease-out;
+            filter: blur(10px);
+            text-shadow: 0 0 50px rgba(196, 30, 58, 0.3);
+            user-select: none;
         }
 
-        /* 激活后的动画状态 */
-        .slogan.show {
-            opacity: 1;
-            transform: translateY(0);
+        .ink-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(20, 20, 20, 0) 0%, #050505 100%);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .brush-texture {
+            position: fixed;
+            inset: 0;
+            background-image: url('https://www.transparenttextures.com/patterns/black-paper.png');
+            opacity: 0.1;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .progress-line {
+            position: fixed;
+            right: 15px;
+            top: 10%;
+            height: 80%;
+            width: 1px;
+            background: rgba(255,255,255,0.05);
+            z-index: 100;
+        }
+
+        .progress-fill {
+            width: 100%;
+            height: 0%;
+            background: var(--accent-red);
+            box-shadow: 0 0 15px var(--accent-red);
+        }
+
+        /* Red Seal */
+        .seal {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 50px;
+            height: 50px;
+            border: 2px solid var(--accent-red);
+            color: var(--accent-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 20px;
+            opacity: 0.4;
+            transform: rotate(-10deg);
+            z-index: 50;
         }
     </style>
 </head>
 <body>
+    <div class="brush-texture"></div>
+    <div class="ink-overlay"></div>
 
-    <div class="spacer">
-        <p>正在为您加载内容...</p>
-        <small>（页面将自动滚动）</small>
+    <div class="progress-line">
+        <div id="progressFill" class="progress-fill"></div>
     </div>
 
-    <div id="target" class="target-section">
-        <div class="slogan" id="sloganText">一马当先</div>
+    <div class="seal">
+        <span>马</span>
     </div>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <section class="char-box">
+            <div class="char text-zinc-100">一</div>
+        </section>
+        <section class="char-box">
+            <div class="char text-red-700">马</div>
+        </section>
+        <section class="char-box">
+            <div class="char text-zinc-100">当</div>
+        </section>
+        <section class="char-box">
+            <div class="char text-zinc-100">先</div>
+        </section>
+    </main>
 
     <script>
-        window.onload = function() {
-            // 延迟 800ms 执行，确保微信环境加载稳定
-            setTimeout(() => {
-                // 1. 平滑滚动到目标位置
-                document.getElementById('target').scrollIntoView({
-                    behavior: 'smooth'
-                });
+        gsap.registerPlugin(ScrollTrigger);
 
-                // 2. 监听滚动，或者直接延迟显示文字
-                setTimeout(() => {
-                    document.getElementById('sloganText').classList.add('show');
-                }, 800); 
-            }, 800);
-        };
+        // Character Reveal Animations
+        const characters = gsap.utils.toArray(".char");
+        characters.forEach((char) => {
+            gsap.to(char, {
+                opacity: 1,
+                y: 0,
+                filter: "blur(0px)",
+                scrollTrigger: {
+                    trigger: char.parentElement,
+                    start: "top 70%",
+                    end: "top 20%",
+                    scrub: 1
+                }
+            });
+
+            // Gentle parallax movement
+            gsap.to(char, {
+                y: -80,
+                scrollTrigger: {
+                    trigger: char.parentElement,
+                    start: "top top",
+                    end: "bottom top",
+                    scrub: true
+                }
+            });
+        });
+
+        // Progress Fill
+        gsap.to("#progressFill", {
+            height: "100%",
+            ease: "none",
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 0.1
+            }
+        });
+
+        // Automatic Scroll after 2 seconds
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
+                gsap.to(window, {
+                    scrollTo: totalHeight,
+                    duration: 8, // Adjust speed here
+                    ease: "power1.inOut"
+                });
+            }, 2000);
+        });
+
+        // Add ScrollToPlugin functionality via main gsap if available or simple window scroll
+        // Since we didn't include ScrollToPlugin script explicitly, 
+        // we can use a simpler approach if we want to avoid another script tag
+        // but for smooth control, we'll just use a native scroll animation for reliability
+        function autoScroll() {
+            const dest = document.documentElement.scrollHeight - window.innerHeight;
+            const duration = 10000; // 10 seconds for the whole trip
+            const startTime = performance.now();
+            const startPos = window.scrollY;
+
+            function step(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                // Ease function: easeInOutQuad
+                const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+                
+                window.scrollTo(0, startPos + (dest - startPos) * ease);
+
+                if (progress < 1) {
+                    requestAnimationFrame(step);
+                }
+            }
+            requestAnimationFrame(step);
+        }
+
+        // Overriding the GSAP scrollTo since we didn't load the plugin
+        window.addEventListener('load', () => {
+            setTimeout(autoScroll, 2000);
+        });
     </script>
 </body>
 </html>
